@@ -14,18 +14,18 @@ For a scalable, secure, and production-ready enterprise deployment, the followin
 graph TD
     User[Internet Users] --> LB[Cloud Load Balancing]
     
-    subgraph GCP_Environment [GCP Environment]
+    subgraph GCP_Environment ["GCP Environment"]
         LB -->|HTTPS / API| CloudRunFrontend[Cloud Run: Streamlit Frontend]
         LB -->|HTTPS / API| CloudRunBackend[Cloud Run: FastAPI Backend]
         
         CloudRunFrontend -->|Internal API Calls| CloudRunBackend
         
-        subgraph Managed_Services [Managed Services]
+        subgraph Managed_Services ["Managed Services"]
             CloudRunBackend -->|VPC Peering| CloudSQL[(Cloud SQL for PostgreSQL)]
             CloudRunBackend -->|VPC Peering| Memorystore[(Memorystore for Redis)]
         end
         
-        subgraph Vertex_AI_Integration [Vertex AI Integration]
+        subgraph Vertex_AI_Integration ["Vertex AI Integration"]
             CloudRunBackend -->|IAM Authenticated| VertexGemini[Vertex AI Gemini API]
         end
     end
