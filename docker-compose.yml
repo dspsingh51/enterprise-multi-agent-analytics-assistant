@@ -1,0 +1,80 @@
+services:
+  db:
+    image: postgres:15-alpine
+    container_name: analytics_db
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres_secure_password
+      POSTGRES_DB: analytics_assistant
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d analytics_assistant"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    container_name: analytics_redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  backend:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.backend
+    container_name: analytics_backend
+    environment:
+      - ENVIRONMENT=docker
+      - PORT=8000
+      - HOST=0.0.0.0
+      - LLM_PROVIDER=${LLM_PROVIDER:-google}
+      - LLM_MODEL=${LLM_MODEL:-gemini-2.5-flash}
+      - GEMINI_API_KEY=${GEMINI_API_KEY}
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - CONVERSATION_HISTORY_LIMIT=${CONVERSATION_HISTORY_LIMIT:-20}
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres_secure_password
+      - POSTGRES_DB=analytics_assistant
+      - POSTGRES_HOST=db
+      - POSTGRES_PORT=5432
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./app:/app/app
+      - ./examples:/app/examples
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  frontend:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.frontend
+    container_name: analytics_frontend
+    environment:
+      - BACKEND_URL=http://backend:8000
+    ports:
+      - "8501:8501"
+    volumes:
+      - ./frontend:/app/frontend
+    depends_on:
+      - backend
+
+volumes:
+  postgres_data:
+  redis_data:
