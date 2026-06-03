@@ -12,17 +12,17 @@ The platform is designed to run in a modular, containerized environment, with mi
 graph TD
     Client[Browser Streamlit UI] -- HTTP / WebSockets --> Gateway[FastAPI Backend Server]
     
-    subgraph Core Orchestration
+    subgraph Core_Orchestration [Core Orchestration]
         Gateway --> Router[LangGraph Agent Graph]
         Router --> AgentBase[Agent Core & LLM Abstraction]
     end
     
-    subgraph Data & Memory Services
+    subgraph Data_Memory_Services [Data & Memory Services]
         Gateway -- Checkpoints & Session Cache --> RedisCheck[{Redis Cache / Local In-Memory Fallback}]
         Gateway -- Analytical Tables --> PGDB[(PostgreSQL Warehouse / SQLite Fallback)]
     end
     
-    subgraph LLM Services
+    subgraph LLM_Services [LLM Services]
         AgentBase -- API Invocations --> Gemini[Google Gemini Client]
         AgentBase -- Fallback API --> OpenAI[OpenAI Compatible API]
     end
